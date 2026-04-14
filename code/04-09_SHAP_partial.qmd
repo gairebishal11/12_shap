@@ -12,7 +12,6 @@ Our learning objectives are to:
 
 -   Interpret and explain the various plots from SHAP to do a local and global interpretation
 
-
 # ML Workflow with XGBoost
 
 ## Step 1: Load Libraries
@@ -445,7 +444,6 @@ final_spec %>%
   labs(y = NULL)
 ```
 
-
 ```{r}
 # To visualize the SHAP we need 2 things, model fit and the data (test or train) in a matrix format
 
@@ -475,42 +473,41 @@ The **SHAP summary plot** (also called beeswarm plot) provides a compact, inform
 
 #### How to Read This Plot
 
-- **Y-axis (vertical)**: Features are ranked from most to least important (based on the mean absolute SHAP value). The top feature has the largest overall impact on predicted `strength_gtex`.
-- **X-axis (horizontal)**: SHAP value. 
-  - Positive values (right of 0) → the feature **increases** the predicted `strength_gtex`.
-  - Negative values (left of 0) → the feature **decreases** the predicted `strength_gtex`.
-- **Each dot** represents one observation (test sample). Dots that pile up vertically show higher density (more common values).
-- **Color** represents the original feature value:
-  - **Yellow/Orange** = high value of that variable
-  - **Purple** = low value of that variable
+-   **Y-axis (vertical)**: Features are ranked from most to least important (based on the mean absolute SHAP value). The top feature has the largest overall impact on predicted `strength_gtex`.
+-   **X-axis (horizontal)**: SHAP value.
+    -   Positive values (right of 0) → the feature **increases** the predicted `strength_gtex`.
+    -   Negative values (left of 0) → the feature **decreases** the predicted `strength_gtex`.
+-   **Each dot** represents one observation (test sample). Dots that pile up vertically show higher density (more common values).
+-   **Color** represents the original feature value:
+    -   **Yellow/Orange** = high value of that variable
+    -   **Purple** = low value of that variable
 
 #### Key Insights from Your Plot
 
-1. **Most Important Features**  
-   The top three variables have the strongest influence:
-   - `mean_dayl_s_Sep` (mean day length in September) — mean |SHAP| = 0.352
-   - `mean_tmin_c_Sep` (mean minimum temperature in September) — 0.301
-   - `mean_srad_wm2_Aug` (mean solar radiation in August) — 0.284
+1.  **Most Important Features**\
+    The top three variables have the strongest influence:
 
-   These late-summer / early-fall weather conditions are the strongest drivers of predicted grass strength in your model.
+    -   `mean_dayl_s_Sep` (mean day length in September) — mean \|SHAP\| = 0.352
+    -   `mean_tmin_c_Sep` (mean minimum temperature in September) — 0.301
+    -   `mean_srad_wm2_Aug` (mean solar radiation in August) — 0.284
 
-2. **Direction of Effects** (Relationship Patterns)
-   - For **September day length** (`mean_dayl_s_Sep`): High values (yellow) mostly push SHAP values positive → longer day length in September **increases** predicted `strength_gtex`.
-   - For **September minimum temperature** (`mean_tmin_c_Sep`): High values (yellow) tend to appear on the positive side → warmer minimum temperatures in September are associated with **higher** strength.
-   - For **August solar radiation** (`mean_srad_wm2_Aug`): High values (yellow) are mostly on the positive side, while low values (purple) are more on the negative side → higher solar radiation in August strongly **increases** the prediction.
-   - Similar patterns appear for other temperature and radiation variables in May–October (growing season months).
+    These late-summer / early-fall weather conditions are the strongest drivers of predicted grass strength in your model.
 
-3. **Overall Pattern**  
-   Most of the top features show a clear trend: **higher values** (yellow) tend to produce **positive SHAP values** (increase the prediction), while **lower values** (purple) produce **negative SHAP values** (decrease the prediction). This suggests that warmer temperatures, longer days, and higher solar radiation during the growing season are beneficial for `strength_gtex`.
+2.  **Direction of Effects** (Relationship Patterns)
+
+    -   For **September day length** (`mean_dayl_s_Sep`): High values (yellow) mostly push SHAP values positive → longer day length in September **increases** predicted `strength_gtex`.
+    -   For **September minimum temperature** (`mean_tmin_c_Sep`): High values (yellow) tend to appear on the positive side → warmer minimum temperatures in September are associated with **higher** strength.
+    -   For **August solar radiation** (`mean_srad_wm2_Aug`): High values (yellow) are mostly on the positive side, while low values (purple) are more on the negative side → higher solar radiation in August strongly **increases** the prediction.
+    -   Similar patterns appear for other temperature and radiation variables in May–October (growing season months).
+
+3.  **Overall Pattern**\
+    Most of the top features show a clear trend: **higher values** (yellow) tend to produce **positive SHAP values** (increase the prediction), while **lower values** (purple) produce **negative SHAP values** (decrease the prediction). This suggests that warmer temperatures, longer days, and higher solar radiation during the growing season are beneficial for `strength_gtex`.
 
 #### What This Means in Context
 
 Your XGBoost model has learned that late-summer and early-fall weather conditions (especially in September) are critical for grass strength. Variables related to temperature and solar radiation dominate over precipitation in this dataset. The spread of dots shows variability — the effect is not perfectly linear, and some observations show stronger or weaker influences depending on the exact conditions.
 
 This global view complements the variable importance plot you generated earlier with `vip()` and helps validate that the model is capturing biologically meaningful relationships.
-
-
-
 
 ```{r}
 ## === GLOBAL SHAP PLOTS ===
@@ -524,35 +521,33 @@ sv_importance(shap_obj,) +
   ggtitle("SHAP Global Feature Importance (Mean |SHAP Value|)") +
   theme_minimal(base_size = 12)
 ```
+
 ### SHAP Dependence Plot: Interaction Between May Temperature and September Day Length
 
 This **SHAP dependence plot** shows how the value of one feature (`mean_dayl_s_Sep` – mean day length in September) affects the model’s prediction of `strength_gtex`, while also revealing **interactions** with another feature (here colored by `mean_dayl.s_Aug` – mean day length in August).
 
 #### How to Read a SHAP Dependence Plot
 
-- **X-axis**: The actual value of the feature being examined (`mean_dayl_s_Sep` in this case).
-- **Y-axis**: The SHAP value for that feature — i.e., how much this feature contributes to pushing the prediction **higher** (positive) or **lower** (negative).
-- **Each point** represents one observation from the test set.
-- **Color** indicates the value of a second interacting feature (in this plot: August day length). Yellow = high values, purple = low values.
+-   **X-axis**: The actual value of the feature being examined (`mean_dayl_s_Sep` in this case).
+-   **Y-axis**: The SHAP value for that feature — i.e., how much this feature contributes to pushing the prediction **higher** (positive) or **lower** (negative).
+-   **Each point** represents one observation from the test set.
+-   **Color** indicates the value of a second interacting feature (in this plot: August day length). Yellow = high values, purple = low values.
 
 #### Key Insights from This Plot
 
-- There is a **strong positive relationship** between September day length and its SHAP contribution. 
-  - When September day length is shorter (around 43,600–43,720 seconds), the SHAP values are mostly **negative** (ranging from -1.0 to -0.3). This means short September days **decrease** the predicted grass strength.
-  - As September day length increases (moving right on the x-axis), the SHAP values rise sharply and become **positive** (up to +0.6). Longer days in September strongly **increase** the predicted `strength_gtex`.
-
-- The plot also reveals an **interaction effect** with August day length:
-  - Points with **higher August day length** (yellow/orange) tend to sit higher on the plot, especially at longer September day lengths.
-  - This suggests that the beneficial effect of long September days is **amplified** when August also had longer days. In other words, consecutive months with longer daylight hours have a synergistic positive impact on grass strength.
-
-- The relationship is roughly **non-linear** — the positive effect becomes stronger once September day length exceeds approximately 43,750 seconds.
+-   There is a **strong positive relationship** between September day length and its SHAP contribution.
+    -   When September day length is shorter (around 43,600–43,720 seconds), the SHAP values are mostly **negative** (ranging from -1.0 to -0.3). This means short September days **decrease** the predicted grass strength.
+    -   As September day length increases (moving right on the x-axis), the SHAP values rise sharply and become **positive** (up to +0.6). Longer days in September strongly **increase** the predicted `strength_gtex`.
+-   The plot also reveals an **interaction effect** with August day length:
+    -   Points with **higher August day length** (yellow/orange) tend to sit higher on the plot, especially at longer September day lengths.
+    -   This suggests that the beneficial effect of long September days is **amplified** when August also had longer days. In other words, consecutive months with longer daylight hours have a synergistic positive impact on grass strength.
+-   The relationship is roughly **non-linear** — the positive effect becomes stronger once September day length exceeds approximately 43,750 seconds.
 
 #### Biological Interpretation
 
 This dependence plot supports the idea that **day length during late summer and early fall** is critical for grass strength. Longer photoperiods in September likely allow more time for photosynthesis and carbohydrate accumulation before winter, leading to stronger turf. The interaction with August day length indicates that consistent long days across the peak growing season further enhance this effect.
 
 This visualization goes beyond simple variable importance by showing **how** and **under what conditions** a feature influences the prediction.
-
 
 ```{r}
 ## === DEPENDENCE PLOTS (how individual features affect predictions) ===
@@ -572,26 +567,21 @@ The **SHAP Waterfall Plot** explains **exactly why** the XGBoost model made a sp
 
 #### How to Read This Waterfall Plot
 
-- **Bottom bar (E[f(x)] = 30.4)**: This is the **baseline prediction** — the average predicted `strength_gtex` across the entire dataset (what the model would predict if it knew nothing about this specific observation).
-- **Top bar (f(x) = 27.2)**: This is the **final prediction** for this specific test observation.
-- **Each bar in between** represents one feature’s contribution (its SHAP value):
-  - **Red bars** (pointing left) → The feature **decreases** the prediction.
-  - **Yellow bars** (pointing right) → The feature **increases** the prediction.
-  - The length of the bar shows the **magnitude** of the effect.
-- The plot starts at the baseline (30.4) and **adds/subtracts** each feature’s contribution step by step until it reaches the final prediction (27.2).
+-   **Bottom bar (E\[f(x)\] = 30.4)**: This is the **baseline prediction** — the average predicted `strength_gtex` across the entire dataset (what the model would predict if it knew nothing about this specific observation).
+-   **Top bar (f(x) = 27.2)**: This is the **final prediction** for this specific test observation.
+-   **Each bar in between** represents one feature’s contribution (its SHAP value):
+    -   **Red bars** (pointing left) → The feature **decreases** the prediction.
+    -   **Yellow bars** (pointing right) → The feature **increases** the prediction.
+    -   The length of the bar shows the **magnitude** of the effect.
+-   The plot starts at the baseline (30.4) and **adds/subtracts** each feature’s contribution step by step until it reaches the final prediction (27.2).
 
 #### Key Insights from This Observation
 
-For this particular test sample:
-- The strongest negative driver is **`mean_dayl_s_Sep = 43693`** (very short September day length), which **decreased** the predicted strength by **0.912** units — the largest single push downward.
-- Other negative contributors include low solar radiation in July (`mean_srad_wm2_Jul = 405`), lower September maximum temperature, and low August solar radiation.
-- Only one feature had a noticeable positive effect: **`mean_tmin_c_Oct = 9`** (yellow bar +0.211), which slightly increased the prediction.
-- The remaining **27 other features** had very small individual effects, so they are grouped together at the bottom.
+For this particular test sample: - The strongest negative driver is **`mean_dayl_s_Sep = 43693`** (very short September day length), which **decreased** the predicted strength by **0.912** units — the largest single push downward. - Other negative contributors include low solar radiation in July (`mean_srad_wm2_Jul = 405`), lower September maximum temperature, and low August solar radiation. - Only one feature had a noticeable positive effect: **`mean_tmin_c_Oct = 9`** (yellow bar +0.211), which slightly increased the prediction. - The remaining **27 other features** had very small individual effects, so they are grouped together at the bottom.
 
 Overall, the model predicted **27.2** for this observation (lower than the average of 30.4), mainly because of **suboptimal late-summer and early-fall conditions** — especially the short day length in September.
 
 This local explanation helps us understand the model’s decision for one specific case, which is very useful when you want to interpret individual predictions (e.g., why a particular month/year had low grass strength).
-
 
 ```{r}
 ## === INDIVIDUAL PREDICTION EXPLANATIONS ===
@@ -611,7 +601,4 @@ In this exercise, we covered: -XGBoost algorithm.
 
 # Further Resources
 
--  A Unified Approach to Interpreting Model Predictions {Scott M Lundberg, Su-In Lee Advances in Neural Information Processing Systems 30 (NIPS 2017)}
-
-
-
+-   A Unified Approach to Interpreting Model Predictions {Scott M Lundberg, Su-In Lee Advances in Neural Information Processing Systems 30 (NIPS 2017)}
