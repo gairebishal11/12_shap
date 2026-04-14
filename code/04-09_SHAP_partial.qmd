@@ -347,10 +347,10 @@ best_rmse %>%
 
 ```{r final_spec_fit}
 final_spec <- boost_tree(
-  trees = best_r2$trees,           # Number of boosting rounds (trees)
-  tree_depth = best_r2$tree_depth, # Maximum depth of each tree
-  min_n = best_r2$min_n,           # Minimum number of samples to split a node
-  learn_rate = best_r2$learn_rate  # Learning rate (step size shrinkage)
+  trees = 1927,           # Number of boosting rounds (trees)
+  tree_depth = 13, # Maximum depth of each tree
+  min_n = 27,           # Minimum number of samples to split a node
+  learn_rate = 0.00067  # Learning rate (step size shrinkage)
 ) %>%
   set_engine("xgboost") %>%
   set_mode("regression")
@@ -450,17 +450,21 @@ final_spec %>%
 # SHAP ANALYSIS with your final_fit (last_fit)
 
 ## 1. Prepare the pre-processed test data (exactly as the model saw it)
-test_baked <- 
+test_baked <- bake(weather_prep, new_data = weather_test)
 
 ## 2. Create the matrix for SHAP computation (predictors only)
 X_pred <- test_baked %>% 
+  dplyr::select(-strength_gtex) %>%
+  as.matrix()
 
 
 ## 3. Extract the raw xgboost model from your last_fit object
-xgb_fitted <- 
+xgb_fitted <- extract_fit_engine(final_fit)
 
 ## 4. Compute SHAP values (TreeSHAP – very fast)
 shap_obj <- shapviz(
+  object = xgb_fitted,
+  X_pred = X_pred
 
 )
 
@@ -513,11 +517,12 @@ This global view complements the variable importance plot you generated earlier 
 ## === GLOBAL SHAP PLOTS ===
 
 # 1. SHAP Summary Beeswarm Plot (most informative – shows importance + effect direction)
-sv_importance(shap_obj,) +
-  
+# 1. SHAP Summary Beeswarm Plot
+sv_importance(shap_obj, kind = "beeswarm", show_numbers = TRUE) +
+  ggtitle("SHAP Summary Plot - Beeswarm")
 
 # 2. SHAP Bar Importance Plot
-sv_importance(shap_obj,) +
+sv_importance(shap_obj, kind = "bar") +
   ggtitle("SHAP Global Feature Importance (Mean |SHAP Value|)") +
   theme_minimal(base_size = 12)
 ```
@@ -553,11 +558,10 @@ This visualization goes beyond simple variable importance by showing **how** and
 ## === DEPENDENCE PLOTS (how individual features affect predictions) ===
 
 # Check your available variable names first
-colnames(X)
+#olnames(X)
 
-# Example dependence plot – replace "May_temp" with one of your actual column names
-sv_dependence(shap_obj, ) +   # change variable name
-  ggtitle("SHAP Dependence Plot: Sep_temp") +
+sv_dependence(shap_obj, v = "mean_vp.pa_May", color_var = "mean_vp.pa_May") +
+  ggtitle("SHAP Dependence Plot: mean_vp.pa_May") +
   theme_minimal()
 ```
 
